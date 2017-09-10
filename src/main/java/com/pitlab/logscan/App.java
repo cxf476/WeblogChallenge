@@ -6,6 +6,9 @@ import org.apache.flink.configuration.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.pitlab.logscan.data.LogEntry;
+
+
 /**
  * Hello world!
  *
@@ -20,6 +23,8 @@ public class App {
     	parameters.setBoolean("recursive.file.enumeration", true);
     	// pass the configuration to the data source
     	DataSet<String> logs = env.readTextFile("data").withParameters(parameters);
-    	logger.info("loaded {} records", logs.count());
+    	DataSet<LogEntry> entries = logs.map(t-> new LogEntry(t));
+    	
+    	logger.info("loaded {} records from {} lines", entries.count(), logs.count());
     }
 }
