@@ -10,17 +10,19 @@ import org.apache.flink.util.Collector;
 
 import com.pitlab.logscan.data.LogEntry;
 
-public class SessionTimeGroupReducer implements GroupReduceFunction<Tuple2<String, LogEntry>, Tuple1<Long>> {
+public class SessionTimeGroupReducer implements GroupReduceFunction<Tuple2<String, LogEntry>, Tuple2<Long, String>> {
   private static final long serialVersionUID = 435227991849446620L;
 
   @Override
-  public void reduce(Iterable<Tuple2<String, LogEntry>> values, Collector<Tuple1<Long>> out)
+  public void reduce(Iterable<Tuple2<String, LogEntry>> values, Collector<Tuple2<Long, String>> out)
       throws Exception {
     LocalDateTime startTime = null;
     LocalDateTime endTime = null;
+    String session = null;
     
     for(Tuple2<String, LogEntry> value : values) {
       LocalDateTime curTime = value.f1.getTimeStamp();
+      session = value.f0;
       if(startTime == null) {
         endTime = startTime = curTime;
       } else {
@@ -33,7 +35,7 @@ public class SessionTimeGroupReducer implements GroupReduceFunction<Tuple2<Strin
       }
     }
     if(startTime != null && endTime!= null) {
-      out.collect(new Tuple1<>(Duration.between(startTime, endTime).getSeconds()));
+      out.collect(new Tuple2<>(Duration.between(startTime, endTime).getSeconds(), session));
     }
   }
 
