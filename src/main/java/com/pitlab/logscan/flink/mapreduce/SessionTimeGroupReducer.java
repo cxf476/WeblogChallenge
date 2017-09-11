@@ -18,11 +18,11 @@ public class SessionTimeGroupReducer implements GroupReduceFunction<Tuple2<Strin
       throws Exception {
     LocalDateTime startTime = null;
     LocalDateTime endTime = null;
-    String session = null;
+    String clientIP = null;
     
     for(Tuple2<String, LogEntry> value : values) {
       LocalDateTime curTime = value.f1.getTimeStamp();
-      session = value.f0;
+      clientIP = value.f1.getClientIP();
       if(startTime == null) {
         endTime = startTime = curTime;
       } else {
@@ -35,7 +35,7 @@ public class SessionTimeGroupReducer implements GroupReduceFunction<Tuple2<Strin
       }
     }
     if(startTime != null && endTime!= null) {
-      out.collect(new Tuple2<>(Duration.between(startTime, endTime).getSeconds(), session));
+      out.collect(new Tuple2<>(Duration.between(startTime, endTime).getSeconds(), clientIP));
     }
   }
 

@@ -51,7 +51,7 @@ public class App {
     	DataSet<Tuple3<String, LocalDateTime, LogEntry>> entries = logs.map(new EntryLoadMapper());
     	//step1: Sessionize the web log by client IP
     	DataSet<Tuple2<String, LogEntry>> sessions = entries.groupBy(0).sortGroup(1, Order.ASCENDING).reduceGroup(new SessionGroupReducer());
-    	//get session times (Seconds, Session)
+    	//get session times
     	DataSet<Tuple2<Long, String>> sessionTimes = sessions.groupBy(0).reduceGroup(new SessionTimeGroupReducer());
     	//step2:calculate the average session times
     	DataSet<Long> avgTime = sessionTimes.reduceGroup(new AverageGroupReducer());
@@ -59,7 +59,8 @@ public class App {
     	//step3:calculate unique URL visits per session, be aware the first parameter in uvSet is a random value
     	DataSet<Tuple3<String, String, Integer>> uvSet = sessions.map(new UniqueUrlSessionMapper()).distinct(0).groupBy(1).aggregate(Aggregations.SUM, 2);
     	//step4: Find the most engaged users
-    	
-    	logger.info("loaded {} records from {} lines, avg session Time is {} seconds", sessions.count(), logs.count(), avgTime.collect().get(0));
+    	DataSet<Tuple2<Long, String>> longSessions = sessionTimes.groupBy(1).aggregate(Aggregations.SUM, 0).sortPartition(0, Order.DESCENDING).setParallelism(1).first(10);
+    	longSessions.print();
+    	//logger.info("loaded {} records from {} lines, avg session Time is {} seconds", sessions.count(), logs.count(), avgTime.collect().get(0));
     }
 }
